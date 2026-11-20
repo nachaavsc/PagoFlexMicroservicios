@@ -21,37 +21,25 @@ public class AuthController {
 
     @PostMapping("/registro")
     @Operation(summary = "Registrar usuario y sincronizar perfil vía Feign")
-    public ResponseEntity<?> registrar(@RequestBody Map<String, String> body) {
-        try {
-            Autenticacion creada = authService.registrar(
-                    body.get("nombre"),
-                    body.get("correo"),
-                    body.get("clave"),
-                    body.getOrDefault("telefono", "")
-            );
-            return ResponseEntity.status(HttpStatus.CREATED).body(creada);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        }
+    public ResponseEntity<Autenticacion> registrar(@RequestBody Map<String, String> body) {
+        Autenticacion creada = authService.registrar(
+                body.get("nombre"),
+                body.get("correo"),
+                body.get("clave"),
+                body.getOrDefault("telefono", "")
+        );
+        return ResponseEntity.status(HttpStatus.CREATED).body(creada);
     }
 
     @PostMapping("/login")
     @Operation(summary = "Validar credenciales de acceso")
-    public ResponseEntity<?> login(@RequestBody Map<String, String> body) {
-        try {
-            return ResponseEntity.ok(authService.login(body.get("correo"), body.get("clave")));
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", e.getMessage()));
-        }
+    public ResponseEntity<Autenticacion> login(@RequestBody Map<String, String> body) {
+        return ResponseEntity.ok(authService.login(body.get("correo"), body.get("clave")));
     }
 
     @PutMapping("/cambiar-clave")
     @Operation(summary = "Actualizar contraseña")
-    public ResponseEntity<?> cambiarClave(@RequestBody Map<String, String> body) {
-        try {
-            return ResponseEntity.ok(authService.cambiarClave(body.get("correo"), body.get("nuevaClave")));
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<Autenticacion> cambiarClave(@RequestBody Map<String, String> body) {
+        return ResponseEntity.ok(authService.cambiarClave(body.get("correo"), body.get("nuevaClave")));
     }
-}
+}   
