@@ -8,7 +8,6 @@ import com.PagoFlex.Compromisos.Repository.PagoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -30,13 +29,14 @@ public class CompromisoService {
 
     public Compromiso obtenerPorId(Long id) {
         return compromisoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Compromiso no encontrado"));
+                .orElseThrow(() -> new RuntimeException("Compromiso no encontrado con id " + id));
     }
 
     public Compromiso crearCompromiso(Compromiso compromiso) {
         if (compromiso.getUsuarioId() == null) {
             throw new IllegalArgumentException("El usuarioId es obligatorio");
         }
+
         try {
             Map<String, Object> usuario = usuarioFeignClient.obtenerUsuarioPorId(compromiso.getUsuarioId());
             if (usuario == null || usuario.isEmpty()) {
@@ -47,12 +47,6 @@ public class CompromisoService {
         } catch (Exception e) {
             throw new IllegalArgumentException("No se pudo validar el usuario en ms-usuarios");
         }
-
-        if (compromiso.getMontoPagado() == null) compromiso.setMontoPagado(0.0);
-        if (compromiso.getCuotasTotales() == null || compromiso.getCuotasTotales() < 1) compromiso.setCuotasTotales(1);
-        if (compromiso.getCuotasPagadas() == null) compromiso.setCuotasPagadas(0);
-        if (compromiso.getEstado() == null || compromiso.getEstado().isBlank()) compromiso.setEstado("PENDIENTE");
-
         return compromisoRepository.save(compromiso);
     }
 
@@ -63,12 +57,10 @@ public class CompromisoService {
         }
 
         pago.setCompromisoId(compromisoId);
-        if (pago.getFechaPago() == null) pago.setFechaPago(LocalDateTime.now());
-        if (pago.getMetodoPago() == null || pago.getMetodoPago().isBlank()) pago.setMetodoPago("TRANSFERENCIA");
         Pago pagoGuardado = pagoRepository.save(pago);
 
         double nuevoPagado = (comp.getMontoPagado() != null ? comp.getMontoPagado() : 0.0) + pago.getMonto();
-        int nuevasCuotas = (comp.getCuotasPagadas() != null ? comp.getCuotasPagadas() : 0) + 1;
+        int nuevasCuotas = (comp.getCuotasPagadas() != null ? comp.getCuotasPagadas() : 0) + 1;  
         comp.setMontoPagado(nuevoPagado);
         comp.setCuotasPagadas(nuevasCuotas);
         comp.setEstado(nuevoPagado >= comp.getMontoTotal() ? "PAGADO" : "EN_PROCESO");
@@ -83,7 +75,7 @@ public class CompromisoService {
 
     public void eliminarCompromiso(Long id) {
         if (!compromisoRepository.existsById(id)) {
-            throw new RuntimeException("Compromiso no encontrado");
+            throw new RuntimeException("Compromiso no encontrado con id " + id);
         }
         compromisoRepository.deleteById(id);
     }
