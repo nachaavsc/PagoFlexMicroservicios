@@ -49,8 +49,7 @@ class CompromisoServiceTest {
     void crearCompromiso_usuarioInvalido_lanzaExcepcion() {
         Compromiso c = new Compromiso();
         c.setUsuarioId(99L);
-        
-        // Simulamos que Feign no encuentra al usuario
+
         when(usuarioFeignClient.obtenerUsuarioPorId(99L)).thenThrow(new RuntimeException("404"));
 
         assertThrows(IllegalArgumentException.class, () -> service.crearCompromiso(c));
@@ -68,13 +67,11 @@ class CompromisoServiceTest {
         when(pagoRepository.save(any(Pago.class))).thenAnswer(i -> i.getArgument(0));
         when(compromisoRepository.save(any(Compromiso.class))).thenAnswer(i -> i.getArgument(0));
 
-        // Pago parcial (400)
         Pago pago1 = new Pago();
         pago1.setMonto(400.0);
         service.registrarPago(1L, pago1);
         assertEquals("EN_PROCESO", comp.getEstado());
 
-        // Pago final (600)
         Pago pago2 = new Pago();
         pago2.setMonto(600.0);
         service.registrarPago(1L, pago2);
