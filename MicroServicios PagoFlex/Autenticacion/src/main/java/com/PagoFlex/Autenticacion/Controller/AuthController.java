@@ -1,6 +1,5 @@
 package com.PagoFlex.Autenticacion.Controller;
 
-import com.PagoFlex.Autenticacion.Model.Autenticacion;
 import com.PagoFlex.Autenticacion.Service.AutenticacionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -21,25 +20,36 @@ public class AuthController {
 
     @PostMapping("/registro")
     @Operation(summary = "Registrar usuario y sincronizar perfil vía Feign")
-    public ResponseEntity<Autenticacion> registrar(@RequestBody Map<String, String> body) {
-        Autenticacion creada = authService.registrar(
-                body.get("nombre"),
-                body.get("correo"),
-                body.get("clave"),
-                body.getOrDefault("telefono", "")
-        );
-        return ResponseEntity.status(HttpStatus.CREATED).body(creada);
+    public ResponseEntity<?> registrar(@RequestBody Map<String, String> body) {
+        try {
+            return ResponseEntity.status(HttpStatus.CREATED).body(authService.registrar(
+                    body.get("nombre"),
+                    body.get("correo"),
+                    body.get("clave"),
+                    body.getOrDefault("telefono", "")
+            ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 
     @PostMapping("/login")
     @Operation(summary = "Validar credenciales de acceso")
-    public ResponseEntity<Autenticacion> login(@RequestBody Map<String, String> body) {
-        return ResponseEntity.ok(authService.login(body.get("correo"), body.get("clave")));
+    public ResponseEntity<?> login(@RequestBody Map<String, String> body) {
+        try {
+            return ResponseEntity.ok(authService.login(body.get("correo"), body.get("clave")));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", e.getMessage()));
+        }
     }
 
     @PutMapping("/cambiar-clave")
     @Operation(summary = "Actualizar contraseña")
-    public ResponseEntity<Autenticacion> cambiarClave(@RequestBody Map<String, String> body) {
-        return ResponseEntity.ok(authService.cambiarClave(body.get("correo"), body.get("nuevaClave")));
+    public ResponseEntity<?> cambiarClave(@RequestBody Map<String, String> body) {
+        try {
+            return ResponseEntity.ok(authService.cambiarClave(body.get("correo"), body.get("nuevaClave")));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        }
     }
-}   
+}

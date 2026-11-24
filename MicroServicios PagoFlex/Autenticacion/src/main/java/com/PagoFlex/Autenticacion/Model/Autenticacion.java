@@ -1,5 +1,6 @@
 package com.PagoFlex.Autenticacion.Model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -21,6 +22,7 @@ public class Autenticacion {
     @Column(unique = true, nullable = false)
     private String correo;
 
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @NotBlank(message = "La clave es obligatoria")
     @Column(nullable = false)
     private String claveHash;
