@@ -103,6 +103,15 @@ class UsuarioServiceTest {
     }
 
     @Test
+    void crearUsuario_nombreNulo_asignaNombrePorDefecto() {
+        usuario.setNombre(null);
+        when(repository.existsByCorreo("ana@pagoflex.cl")).thenReturn(false);
+        when(repository.save(any(Usuario.class))).thenAnswer(i -> i.getArgument(0));
+
+        assertEquals("Usuario PagoFlex", service.crearUsuario(usuario).getNombre());
+    }
+
+    @Test
     void crearUsuario_rolVacio_asignaCliente() {
         usuario.setRol("");
         when(repository.existsByCorreo("ana@pagoflex.cl")).thenReturn(false);
