@@ -1,0 +1,91 @@
+x-eureka-cliente: &eureka-cliente
+  SPRING_APPLICATION_JSON: '{"eureka":{"client":{"serviceUrl":{"defaultZone":"http://eureka-server:8761/eureka/"}}}}'
+
+x-base-datos: &base-datos
+  DB_HOST: mysql
+  DB_PORT: 3306
+  DB_USER: root
+  DB_PASSWORD: root
+
+x-dependencias: &dependencias
+  mysql:
+    condition: service_healthy
+  eureka-server:
+    condition: service_started
+
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  eureka-server:
+    build:
+      context: .
+      dockerfile: MicroServicios PagoFlex/eureka-server/Dockerfile
+    ports:
+      - "8761:8761"
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: MicroServicios PagoFlex/api-gateway/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      <<: *eureka-cliente
+    depends_on:
+      - eureka-server
+
+  autenticacion:
+    build:
+      context: .
+      dockerfile: MicroServicios PagoFlex/Autenticacion/Dockerfile
+    ports:
+      - "8081:8081"
+    environment:
+      <<: [*eureka-cliente, *base-datos]
+    depends_on: *dependencias
+
+  usuarios:
+    build:
+      context: .
+      dockerfile: MicroServicios PagoFlex/Usuarios/Dockerfile
+    ports:
+      - "8082:8082"
+    environment:
+      <<: [*eureka-cliente, *base-datos]
+    depends_on: *dependencias
+
+  compromisos:
+    build:
+      context: .
+      dockerfile: MicroServicios PagoFlex/Compromisos/Dockerfile
+    ports:
+      - "8083:8083"
+    environment:
+      <<: [*eureka-cliente, *base-datos]
+    depends_on: *dependencias
+
+  incidencias:
+    build:
+      context: .
+      dockerfile: MicroServicios PagoFlex/Incidencias/Dockerfile
+    ports:
+      - "8084:8084"
+    environment:
+      <<: [*eureka-cliente, *base-datos]
+    depends_on: *dependencias
+
+volumes:
+  mysql-data:
