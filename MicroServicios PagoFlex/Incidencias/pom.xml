@@ -15,7 +15,8 @@
 	<description>Microservicio de Incidencias PagoFlex</description>
 
 	<properties>
-		<java.version>17</java.version>
+		<java.version>25</java.version>
+		<maven.compiler.release>25</maven.compiler.release>
 		<spring-cloud.version>2023.0.3</spring-cloud.version>
 	</properties>
 

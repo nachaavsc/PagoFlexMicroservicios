@@ -2,6 +2,7 @@ package com.PagoFlex.Autenticacion.Controller;
 
 import com.PagoFlex.Autenticacion.Model.Autenticacion;
 import com.PagoFlex.Autenticacion.Service.AutenticacionService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -10,7 +11,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import tools.jackson.databind.json.JsonMapper;
 
 import java.util.Map;
 
@@ -26,7 +26,8 @@ class AuthControllerTest {
     @InjectMocks
     private AuthController controller;
 
-    private final JsonMapper mapper = JsonMapper.builder().build();
+    // Se cambió JsonMapper por ObjectMapper de com.fasterxml
+    private final ObjectMapper mapper = new ObjectMapper();
 
     private Autenticacion credencial;
 
@@ -115,7 +116,7 @@ class AuthControllerTest {
     }
 
     @Test
-    void respuestaJson_noExponeClaveHash() {
+    void respuestaJson_noExponeClaveHash() throws Exception {
         when(authService.login("ana@pagoflex.cl", "1234")).thenReturn(credencial);
 
         String json = mapper.writeValueAsString(controller.login(Map.of("correo", "ana@pagoflex.cl", "clave", "1234")).getBody());
@@ -127,7 +128,7 @@ class AuthControllerTest {
     }
 
     @Test
-    void json_deEntrada_aceptaClaveHash() {
+    void json_deEntrada_aceptaClaveHash() throws Exception {
         Autenticacion leida = mapper.readValue("{\"correo\":\"ana@pagoflex.cl\",\"claveHash\":\"1234\"}", Autenticacion.class);
 
         assertEquals("1234", leida.getClaveHash());
